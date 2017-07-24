@@ -18,6 +18,9 @@ func main() {
 	bittrex := bittrex.New(key, secret)
 	
 	markets, err := bittrex.GetMarkets()
+	if err != nil {
+		fmt.Println("Market data accessible at your wish, lord");
+	}
 	
 	app := cli.NewApp();
 	app.Name = "rex"
