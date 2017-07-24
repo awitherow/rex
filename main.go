@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"github.com/toorop/go-bittrex"
-	"github.com/urfave/cli"
 )
 
 func main() {
@@ -22,13 +21,4 @@ func main() {
 		fmt.Println("Market data accessible at your wish, lord");
 	}
 	
-	app := cli.NewApp();
-	app.Name = "rex"
-	app.Usage = "do not fuck up while trading bitcoin"
-	app.Action = func(c *cli.Context) error {
-		fmt.Println("boom!")
-		return nil
-	}
-
-	app.Run(os.Args)
 }
