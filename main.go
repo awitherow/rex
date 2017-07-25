@@ -16,51 +16,74 @@ func main() {
 	if key == ""  || secret == "" {
 		log.Fatal("[FATAL] Environment not properly configured.")
 	}
-
 	if coinFrom == "" || coinTo == "" {
 		log.Fatal("[FATAL] Please use the run script to use rex.")
 	}
 	
 	bittrex := bittrex.New(key, secret)
-	
+
+	// get balance and establish recommended purchasing price
 	balance, err := bittrex.GetBalances()
 	if err != nil {
 		log.Fatalf("[FATAL] could not get balance for '%s', error: %v", coinFrom, err)
 	}
+	fetchedBalance := strconv.ParseFloat(balance.result.Available)
+	purchasePrice := fetchedBalance - (fetchedBalance * 0.125)
 
-	market := strings.Join([]string{coinFrom, coinTo}, "-")
-	
+	// get product ticker information for market
+	market := strings.Join([]string{coinFrom, coinTo}, "-")	
 	ticker, err := bittrex.GetTicker(market)
 	if err != nil {
-		log.Fatalf("[FATAL] could not get ticker for")
+		log.Fatalf("[FATAL] could not get ticker for %s. Aborting trade.", market)
 	}
 
-	initialAsk := ticker.result.Ask
+	askHistory := []float
+	askHistory = append(askHistory, ticker.result.Ask)
 	fmt.Printf("[INFO] intiial ask price of %d recieved for %s. Beginning trade...", initialAsk, market)
 
-	fetchedBalance := strconv.ParseFloat(balance.result.Available)
-	purchaseBalance := fetchedBalance - (fetchedBalance * 0.125)
-
-	initialPurchaseUUID, err := bittrex.BuyLimit(market, purchaseBalance, initialAsk)
+	// attempt purchase
+	_, err := bittrex.BuyLimit(market, purchasePrice, initialAsk)
 	if err != nil {
-		fmt.Printf("[WARNING] could not purchase at %d, ", initialAsk)
-		// TODO: enter attempt purchase loop for next initialAsk
-		// set limit to at where you'll buy it based on a 0.5% increase (2 attempts ideally
-		// success, err := attemptPurchase()
-		// check error, abort if there is one
-		// if success, enter sell function
+		log.Fatalf("[FATAL] could not purchase at %d, ", initialAsk)
+		// TODO: attempt purchases and then go into sales loop
 	} else {
-		fmt.Print("[INFO] initial purchase successful, watching for best sell opporunities")
-		// set trade active
-		// TODO: enter sell function
+		fmt.Print("[SUCCESS] initial purchase successful, watching for best sell opporunities")
+		var tradeActive = true
+		var stop = askHistory[0] * 0.025
+		for tradeActive {
+			ticker, err := bittrex.GetTicker(market)
+			if err != nil {
+				log.Fatalf("[FATAL] could not get ticker for %s. Aborting trade.", market)
+			}
+
+			ask := ticker.result.Ask
+
+			if ask <= stop {
+				// attempt sale immediately.
+				var checkingSale = true
+				for checkingSale {
+					// get sale
+					// if sale, check ticker
+					// if ticker ask <= stop, set new stop and attempt sale.
+					// repeat
+				}
+			}
+			
+			if ask > askHistory[askHistory.length] {
+				askHistory = append(askHistory, ask)
+				stop = askHistory[askHistory.length] * 0.025
+			}			
+		}
 	}
 }
 
 
-func sell() {
+func sell(b) {
+	var tradeActive = true
+	for tradeActive {
+		
+	}
 	// stop sell everything @ 97.5% of INITIAL_ASK
-	// set "TRADE_ACTIVE"
-	// while TRADE_ACTIVE
 	// check ASK repeatedly for changes.
 	// check open orders for changes
 	// if open orders = 0, exit trade get account && record earnings.
