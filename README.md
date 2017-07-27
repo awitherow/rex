@@ -2,7 +2,7 @@
 
 bittrex cli tool.
 
-### prerequisites
+## prerequisites
 
 - account at bittrex.com
 - set up golang: https://golang.org
@@ -11,9 +11,12 @@ bittrex cli tool.
 
 `go install`
 
-ensure you have a`.env` file, configured like so:
+### environment variables
 
-```bash
-KEY=
-SECRET=
-```
+two exchanges, `gdax` and `bittrex` are supported at the moment.
+
+Your environment will be configured for these two exchanges within the run script. Please have your secrets/API keys ready :)
+
+## running
+
+`scripts/run.sh`
