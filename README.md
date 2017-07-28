@@ -13,9 +13,9 @@ bittrex cli tool.
 
 ### environment variables
 
-two exchanges, `gdax` and `bittrex` are supported at the moment.
+one exchange, `bittrex`, is supported at the moment.
 
-Your environment will be configured for these two exchanges within the run script. Please have your secrets/API keys ready :)
+Your environment will be configured for this exchange within the run script. Please have your secrets/API keys ready :)
 
 ## running
 
