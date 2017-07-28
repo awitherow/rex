@@ -8,10 +8,12 @@ import (
 	"strings"
 )
 
-var exchange string
-var coinFrom string
-var coinTo string
-var market string
+var (
+	exchange string
+	coinFrom string
+	coinTo string
+	market string
+)
 
 func init() {
 	exchange := os.Getenv("EXCHANGE")
@@ -24,7 +26,6 @@ func init() {
 }
 
 func main() {
-	// gather account and market data
 	balance := getBalance()
 	marketData := getMarketTicker()
 
@@ -32,13 +33,7 @@ func main() {
 	trade(balance, marketData);
 }
 
-func trade(b float64, d bittrex.Ticker) {
-	var initialAsk = d.Ask 
-	purchasePrice := b - (b * 0.125)
-	fmt.Printf("[trade] %d (init ask) %d (purchasePrice)", initialAsk, purchasePrice)
-	return
-}
-
+// Client returns a client based on which exchange you've set within the run script.
 func Client() *bittrex.Bittrex {
 	if exchange == "bittrex" {
 		k := os.Getenv("BITTREX_KEY")
@@ -85,6 +80,13 @@ func getMarketTicker() bittrex.Ticker {
 
 	return bittrex.Ticker{}
 }  
+
+func trade(b float64, d bittrex.Ticker) {
+	var initialAsk = d.Ask 
+	purchasePrice := b - (b * 0.125)
+	fmt.Printf("[trade] %d (init ask) %d (purchasePrice)", initialAsk, purchasePrice)
+	return
+}
 
 func sell() {
 	// stop sell everything @ 97.5% of INITIAL_ASK
