@@ -2,23 +2,21 @@ package main
 
 import (
 	"github.com/toorop/go-bittrex"
+	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
-var (
-	exchange
-	coinFrom
-	coinTo
-	market
-)
+var exchange string
+var coinFrom string
+var coinTo string
+var market string
 
 func init() {
 	exchange := os.Getenv("EXCHANGE")
 	coinFrom := strings.ToUpper(os.Getenv("COIN_FROM"))
-	coinTo := strings.toUpper(os.Getenv("COIN_TO"))
+	coinTo := strings.ToUpper(os.Getenv("COIN_TO"))
 	market := strings.Join([]string{coinFrom, coinTo}, "-")
 	if exchange == "" || coinFrom == "" || coinTo == "" || market == "" {
 		log.Fatal("[FATAL] Please set Rex properly with the run script, thanks!")
@@ -27,40 +25,21 @@ func init() {
 
 func main() {
 	// gather account and market data
-	balance := getBalance(e, coinFrom)
-	market := strings.Join([]string{coinFrom, coinTo}, "-")
-	marketData := getMarketTicker(market)
+	balance := getBalance()
+	marketData := getMarketTicker()
 
-	fmt.Printf("[INFO] intiial ask price of %d recieved for %s. Beginning trade...", marketData.Ask, market)
+	fmt.Printf("[INFO] Market Data fetched for  %s. Beginning trade...", market)
 	trade(balance, marketData);
 }
 
-func trade(b number, d bittrex.Ticker) {
+func trade(b float64, d bittrex.Ticker) {
 	var initialAsk = d.Ask 
-	fetchedBalance := strconv.ParseFloat(b.Available)
-	purchaseBalance := fetchedBalance - (fetchedBalance * 0.125)
-	c := Client(exchange)
-
+	purchasePrice := b - (b * 0.125)
+	fmt.Printf("[trade] %d (init ask) %d (purchasePrice)", initialAsk, purchasePrice)
 	return
-	// todo enable trade and conditional selling
-	
-	initialPurchaseUUID, err := c.BuyLimit(market, purchaseBalance, initialAsk)
-	if err != nil {
-		fmt.Printf("[WARNING] could not purchase at %d, ", initialAsk)
-		// TODO: enter attempt purchase loop for next initialAsk
-		// set limit to at where you'll buy it based on a 0.5% increase (2 attempts ideally
-		// success, err := attemptPurchase()
-		// check error, abort if there is one
-		// if success, enter sell function
-	} else {
-		fmt.Print("[INFO] initial purchase successful, watching for best sell opporunities")
-		// set trade active
-		// TODO: enter sell function
-	}
 }
 
-
-func Client() {
+func Client() *bittrex.Bittrex {
 	if exchange == "bittrex" {
 		k := os.Getenv("BITTREX_KEY")
 		s := os.Getenv("BITTREX_SECRET")
@@ -71,11 +50,12 @@ func Client() {
 		return bittrex.New(k, s)
 	}
 	
-	log.Fatal("[FATAL] exchange %s unknown...", e)
+	log.Fatal("[FATAL] exchange %s unknown...", exchange)
+	return nil
 }
 
-func getBalance() number {
-	c := Client(exchange)
+func getBalance() float64 {
+	c := Client()
 	if exchange == "bittrex" {
 		coinInfo, err := c.GetBalance(coinFrom)
 		if err != nil {
@@ -88,11 +68,13 @@ func getBalance() number {
 			return coinInfo.Balance
 		}
 	}
+
+	return 0
 }
 
 func getMarketTicker() bittrex.Ticker {
-	c := Client(exchange) 
-	if exchange === "bittrex" {
+	c := Client() 
+	if exchange == "bittrex" {
 		ticker, err := c.GetTicker(market)
 		if err != nil {
 			log.Fatalf("[FATAL] could not get ticker from ")
@@ -100,6 +82,8 @@ func getMarketTicker() bittrex.Ticker {
 
 		return ticker
 	}
+
+	return bittrex.Ticker{}
 }  
 
 func sell() {
