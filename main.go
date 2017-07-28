@@ -8,81 +8,43 @@ import (
 	"strings"
 )
 
-func Client(e string) {
-	if e == "gdax" {
+var (
+	exchange
+	coinFrom
+	coinTo
+	market
+)
 
-	}
-
-	if e == "bittrex" {
-		k := os.Getenv("BITTREX_KEY")
-		s := os.Getenv("BITTREX_SECRET")
-		if k == "" || s == "" {
-			log.Fatal("[FATAL] Environment not properly configured.")
-		}
-
-		return bittrex.New(k, s)
-	}
-
-	log.Fatal("[FATAL] exchange %s unknown...", e)
-}
-
-func getBalance(e, coinFrom) number {
-	c := Client(e)
-	if e == "bittrex" {
-		balance, err := bittrex.GetBalance(coinFrom)
-		if err != nil {
-			log.Fatalf("[FATAL] failed to get bittrex balance for %s", coinFrom)
-		}
-	}
-
-	if e == "gdax" {
-		accounts, err := client.GetAccounts()
-		if err != nil {
-			log.Fatal("[FATAL] failed to get gdax accounts")
-		}
-
-		for _, a range accounts {
-			if a.currency == coinFrom {
-				if a.balance <= 0 {
-					log.Fatal("[FATAL] insufficient funds, pal.")
-				} else {
-					return 
-				}
-			}
-		}
-
-		log.Fatalf("[FATAL] could not find account corresponding to %s.", coinFrom)
+func init() {
+	exchange := os.Getenv("EXCHANGE")
+	coinFrom := strings.ToUpper(os.Getenv("COIN_FROM"))
+	coinTo := strings.toUpper(os.Getenv("COIN_TO"))
+	market := strings.Join([]string{coinFrom, coinTo}, "-")
+	if exchange == "" || coinFrom == "" || coinTo == "" || market == "" {
+		log.Fatal("[FATAL] Please set Rex properly with the run script, thanks!")
 	}
 }
 
 func main() {
-	exchange := os.Getenv("EXCHANGE")
-	
-	coinFrom := strings.ToUpper(os.Getenv("COIN_FROM"))
-	coinTo := strings.ToUpper(os.Getenv("COIN_TO"))
-	if coinFrom == "" || coinTo == "" {
-		log.Fatal("[FATAL] Please use the run script to use rex.")
-	}
-
+	// gather account and market data
 	balance := getBalance(e, coinFrom)
-
 	market := strings.Join([]string{coinFrom, coinTo}, "-")
+	marketData := getMarketTicker(market)
 
-	// todo refactor everything below to support gdax/bittrex
-	return
-	
-	ticker, err := bittrex.GetTicker(market)
-	if err != nil {
-		log.Fatalf("[FATAL] could not get ticker for")
-	}
+	fmt.Printf("[INFO] intiial ask price of %d recieved for %s. Beginning trade...", marketData.Ask, market)
+	trade(balance, marketData);
+}
 
-	initialAsk := ticker.result.Ask
-	fmt.Printf("[INFO] intiial ask price of %d recieved for %s. Beginning trade...", initialAsk, market)
-
-	fetchedBalance := strconv.ParseFloat(balance.result.Available)
+func trade(b number, d bittrex.Ticker) {
+	var initialAsk = d.Ask 
+	fetchedBalance := strconv.ParseFloat(b.Available)
 	purchaseBalance := fetchedBalance - (fetchedBalance * 0.125)
+	c := Client(exchange)
 
-	initialPurchaseUUID, err := bittrex.BuyLimit(market, purchaseBalance, initialAsk)
+	return
+	// todo enable trade and conditional selling
+	
+	initialPurchaseUUID, err := c.BuyLimit(market, purchaseBalance, initialAsk)
 	if err != nil {
 		fmt.Printf("[WARNING] could not purchase at %d, ", initialAsk)
 		// TODO: enter attempt purchase loop for next initialAsk
@@ -96,6 +58,49 @@ func main() {
 		// TODO: enter sell function
 	}
 }
+
+
+func Client() {
+	if exchange == "bittrex" {
+		k := os.Getenv("BITTREX_KEY")
+		s := os.Getenv("BITTREX_SECRET")
+		if k == "" || s == "" {
+			log.Fatal("[FATAL] Environment not properly configured.")
+		}
+
+		return bittrex.New(k, s)
+	}
+	
+	log.Fatal("[FATAL] exchange %s unknown...", e)
+}
+
+func getBalance() number {
+	c := Client(exchange)
+	if exchange == "bittrex" {
+		coinInfo, err := c.GetBalance(coinFrom)
+		if err != nil {
+			log.Fatalf("[FATAL] failed to get bittrex balance for %s", coinFrom)
+		}
+		
+		if coinInfo.Balance <= 0 {
+			log.Fatal("[FATAL] insufficient funds, pal")
+		} else {
+			return coinInfo.Balance
+		}
+	}
+}
+
+func getMarketTicker() bittrex.Ticker {
+	c := Client(exchange) 
+	if exchange === "bittrex" {
+		ticker, err := c.GetTicker(market)
+		if err != nil {
+			log.Fatalf("[FATAL] could not get ticker from ")
+		}
+
+		return ticker
+	}
+}  
 
 func sell() {
 	// stop sell everything @ 97.5% of INITIAL_ASK
